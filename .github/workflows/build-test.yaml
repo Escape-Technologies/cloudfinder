@@ -29,8 +29,7 @@ jobs:
           go mod tidy
 
       - name: Build
-        run: go build .
-        working-directory: cmd/cli
+        run: make build
 
       - name: Test
         run: go test ./...
