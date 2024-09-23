@@ -3,9 +3,11 @@ package tree
 import (
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 
+	"escape.tech/cloudfinder/internal/log"
 	source "escape.tech/cloudfinder/internal/source"
 )
 
@@ -77,22 +79,20 @@ func newNode() *node {
 
 func (t *tree) Add(ipRange *source.IPRange) {
 	if ipRange.Cat != t.Cat {
-		panic("Invalid IP category")
-		// log.Fatal("Invalid IP category", fmt.Errorf("%d != %d", ipRange.Cat, t.Cat))
+		log.Fatal("Invalid IP category", fmt.Errorf("%d != %d", ipRange.Cat, t.Cat))
 	}
 
-	// TODO: put this back
 	if matchingRange := t.FindIPRange(ipRange.Network.IP); matchingRange != nil {
-		// log.Debug("[Skip] - IP range %s overlaps with existing ip range %s", ipRange.Network.String(), matchingRange.Network.String())
+		log.Debug("[Skip] - IP range %s overlaps with existing ip range %s", ipRange.Network.String(), matchingRange.Network.String())
 
-		// if matchingRange.Provider != ipRange.Provider {
-		// 	// log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has different provider %s", ipRange.Network.String(), matchingRange.Network.String(), ipRange.Provider.String())
-		// 	return
-		// }
+		if matchingRange.Provider != ipRange.Provider {
+			log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has different provider %s", ipRange.Network.String(), matchingRange.Network.String(), ipRange.Provider.String())
+			return
+		}
 		ms, _ := matchingRange.Network.Mask.Size()
 		is, _ := ipRange.Network.Mask.Size()
 		if ms < is {
-			// log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has larger mask, skipping", ipRange.Network.String(), matchingRange.Network.String())
+			log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has larger mask, skipping", ipRange.Network.String(), matchingRange.Network.String())
 			return
 		}
 	}
@@ -145,8 +145,7 @@ func (n *node) find(ipBytes []byte, fallbackMode bool) *source.IPRange {
 	}
 
 	if n.Nodes[closestChildIndex] == nil {
-		panic("Value at closest child index is nil")
-		// log.Fatal("Should not happen", errors.New("Value at closest child index is nil"))
+		log.Fatal("Should not happen", errors.New("value at closest child index is nil"))
 	}
 	return n.Nodes[closestChildIndex].find(ipBytes, fallbackMode)
 }
@@ -178,8 +177,7 @@ func (t *tree) FindIPRange(ip net.IP) *source.IPRange {
 func (t *tree) SerializeTo(w io.Writer) {
 	err := gob.NewEncoder(w).Encode(t)
 	if err != nil {
-		panic("Failed to serialize tree")
-		// log.Fatal("Failed to serialize tree", err)
+		log.Fatal("Failed to serialize tree", err)
 	}
 }
 
@@ -193,8 +191,7 @@ func NewTreeFrom(r io.Reader, cat source.IPCat) Tree {
 
 	err := gob.NewDecoder(r).Decode(t)
 	if err != nil {
-		panic("Failed to deserialize tree")
-		// log.Fatal("Failed to deserialize tree", err)
+		log.Fatal("Failed to deserialize tree", err)
 	}
 	return t
 }

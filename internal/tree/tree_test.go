@@ -2,11 +2,12 @@ package tree
 
 import (
 	"bytes"
+	"errors"
 	"net"
 	"testing"
 
+	"escape.tech/cloudfinder/internal/log"
 	source "escape.tech/cloudfinder/internal/source"
-	// "escape.tech/sdk/logger/logfmt"
 )
 
 func makeTreeHelper() *tree {
@@ -23,10 +24,10 @@ func makeTreeHelper() *tree {
 	for _, networkCdir := range networksCdirs {
 		_, network, err := net.ParseCIDR(networkCdir)
 		if err != nil {
-			// log.Error("Failed to parse CIDR", err)
+			log.Error("Failed to parse CIDR", err)
 		}
 		if network == nil {
-			// log.Error("Failed to parse CIDR", errors.New("Network is nil"))
+			log.Error("Failed to parse CIDR", errors.New("network is nil"))
 		}
 
 		ipRange := &source.IPRange{
