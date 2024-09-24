@@ -1,6 +1,7 @@
 // Modified version of https://github.com/dusted-go/logging/blob/main/prettylog/prettylog.go
 // Licence: https://github.com/dusted-go/logging/blob/main/LICENSE
 
+// nolint
 package log
 
 import (

@@ -133,17 +133,17 @@ type outputMode int
 const (
 	outputDefault outputMode = iota
 	outputRaw
-	outputJson
+	outputJson // nolint:revive
 )
 
 func marshallOutput(input string, ip net.IP, p provider.Provider) string {
 	toMarshall := struct {
 		Input string `json:"input"`
-		Ip    string `json:"ip"`
+		IP    string `json:"ip"`
 		P     string `json:"provider"`
 	}{
 		Input: input,
-		Ip:    ip.String(),
+		IP:    ip.String(),
 		P:     p.String(),
 	}
 	bytes, err := json.Marshal(toMarshall)
