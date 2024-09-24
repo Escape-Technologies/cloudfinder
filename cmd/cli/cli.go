@@ -1,13 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
-	"strings"
 
 	"escape.tech/cloudfinder/internal/log"
 	"escape.tech/cloudfinder/pkg/cloud"
@@ -15,16 +16,60 @@ import (
 )
 
 type args struct {
-	input string
-	debug bool
-	mode  outputMode
+	inputs chan string
+	debug  bool
+	mode   outputMode
 }
 
 func printUsage() {
+	// TODO(@nohehf): better usage message
 	println("Usage:")
-	println("cloudfinder [flags] <ip, host, domain, url>")
+	println("cloudfinder [flags] <ip, host, domain, url> <ip, host, domain, url> ...")
 	println("Flags:")
 	flag.PrintDefaults()
+}
+
+func hasPipe() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		return false
+	}
+	return true
+}
+
+// Return inputs from cli args or fallback to pipe (stdin) if possible
+func getInputs(in *chan string) {
+	// Prioritize args over pipes
+	if len(flag.Args()) == 0 && !hasPipe() {
+		println("ERROR: No argument provided via arguments or stdin. At least one URL, IP or domain is required")
+		printUsage()
+		os.Exit(1)
+	}
+
+	// Send arguments to channel if available
+	if len(flag.Args()) > 0 {
+		for _, f := range flag.Args() {
+			*in <- f
+		}
+		close(*in) // Close the channel after sending all arguments
+		return
+	}
+
+	// Otherwise, read from stdin
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		*in <- scanner.Text()
+	}
+	close(*in) // Close the channel after reading from stdin
+
+	// Check for errors during scanning
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to read from stdin: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func parseArgs() args {
@@ -46,12 +91,6 @@ func parseArgs() args {
 		os.Exit(0)
 	}
 
-	if flag.Arg(0) == "" {
-		println("ERROR: No argument provided. URL, IP or domain is required")
-		printUsage()
-		os.Exit(1)
-	}
-
 	switch {
 	case json:
 		a.mode = outputJson
@@ -59,7 +98,8 @@ func parseArgs() args {
 		a.mode = outputRaw
 	}
 
-	a.input = strings.TrimSpace(flag.Arg(0))
+	a.inputs = make(chan string)
+	go getInputs(&a.inputs)
 	return a
 }
 
@@ -74,15 +114,17 @@ func main() {
 		r.WithLogger(log.NewPrettyLogger(slog.LevelInfo))
 	}
 
-	ips, err := getIPsForURL(context.Background(), a.input)
-	if err != nil {
-		log.Error("Failed to get ips, verify input", err)
-		os.Exit(1)
-	}
+	for i := range a.inputs {
+		ips, err := getIPsForURL(context.Background(), i)
+		if err != nil {
+			log.Error("Failed to get ips, verify input", err)
+			os.Exit(1)
+		}
 
-	for _, ip := range ips {
-		p := r.GetProviderForIP(ip)
-		printOutput(a.input, ip, p, a.mode)
+		for _, ip := range ips {
+			p := r.GetProviderForIP(ip)
+			printOutput(i, ip, p, a.mode)
+		}
 	}
 }
 
