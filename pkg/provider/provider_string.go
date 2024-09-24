@@ -10,11 +10,25 @@ func _() {
 	var x [1]struct{}
 	_ = x[Unknown-0]
 	_ = x[Aws-1]
+	_ = x[Alibaba-2]
+	_ = x[Azure-3]
+	_ = x[Cloudflare-4]
+	_ = x[Digitalocean-5]
+	_ = x[Fastly-6]
+	_ = x[Gcp-7]
+	_ = x[Ibm-8]
+	_ = x[Linode-9]
+	_ = x[Oracle-10]
+	_ = x[Ovh-11]
+	_ = x[Scaleway-12]
+	_ = x[Tencent-13]
+	_ = x[Ucloud-14]
+	_ = x[Vercel-15]
 }
 
-const _Provider_name = "UnknownAws"
+const _Provider_name = "UnknownAwsAlibabaAzureCloudflareDigitaloceanFastlyGcpIbmLinodeOracleOvhScalewayTencentUcloudVercel"
 
-var _Provider_index = [...]uint8{0, 7, 10}
+var _Provider_index = [...]uint8{0, 7, 10, 17, 22, 32, 44, 50, 53, 56, 62, 68, 71, 79, 86, 92, 98}
 
 func (i Provider) String() string {
 	if i < 0 || i >= Provider(len(_Provider_index)-1) {
