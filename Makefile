@@ -1,3 +1,6 @@
+.PHONY: all
+all: lint pre-build build test
+
 .PHONY: lint
 lint: 
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0 run --fast -- $(go list -f '{{.Dir}}/...' -m)
@@ -12,4 +15,4 @@ build: pre-build
 
 .PHONY: test
 test:
-	
+	go test ./...

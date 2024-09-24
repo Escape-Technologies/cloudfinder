@@ -51,7 +51,7 @@ func fmtMsgErr(msg string, err error) string {
 	return wrapErr(msg, err).Error()
 }
 
-var Logger = newLogger(LevelDebug)
+var Logger = NewLogger(LevelDebug)
 
 func logCtx(ctx context.Context, level slog.Level, msg string, args ...interface{}) {
 	Logger.Log(ctx, level, fmt.Sprintf(msg, args...))
@@ -102,7 +102,7 @@ func With(ctx context.Context) struct {
 	}
 }
 
-func newLogger(level slog.Level) *slog.Logger {
+func NewLogger(level slog.Level) *slog.Logger {
 	return slog.New(
 		handler{
 			slog.NewTextHandler(
@@ -116,20 +116,28 @@ func newLogger(level slog.Level) *slog.Logger {
 	)
 }
 
+func NewPrettyLogger(level slog.Level) *slog.Logger {
+	return slog.New(
+		newPrettyHandler(&slog.HandlerOptions{
+			Level: level,
+		}),
+	)
+}
+
 func Setup() {
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel != "" {
 		switch logLevel {
 		case "debug":
-			Logger = newLogger(LevelDebug)
+			Logger = NewLogger(LevelDebug)
 		case "info":
-			Logger = newLogger(LevelInfo)
+			Logger = NewLogger(LevelInfo)
 		case "warning":
-			Logger = newLogger(LevelWarning)
+			Logger = NewLogger(LevelWarning)
 		case "error":
-			Logger = newLogger(LevelError)
+			Logger = NewLogger(LevelError)
 		case "fatal":
-			Logger = newLogger(LevelFatal)
+			Logger = NewLogger(LevelFatal)
 		default:
 			Warning("Skipping level override", fmt.Errorf("unknow level %s", logLevel))
 		}
