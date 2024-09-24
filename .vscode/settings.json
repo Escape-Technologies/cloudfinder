@@ -1,0 +1,16 @@
+{
+  // Go settings
+  "go.lintTool": "golangci-lint",
+  "go.useLanguageServer": true,
+  "go.lintFlags": ["--fast", "--fix"],
+  // Show logs even on test success
+  "go.testFlags": ["-v"],
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  }
+}
