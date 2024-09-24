@@ -1,0 +1,17 @@
+# .goreleaser.yml
+project_name: cloudfinder
+
+builds:
+  - id: cloudfinder_build
+    main: ./cmd/cli
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags: >
+      -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
