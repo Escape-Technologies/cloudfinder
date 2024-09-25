@@ -55,6 +55,7 @@ func GetAllIPRanges(sources []IPRangeSource) []*IPRange {
 		wg.Add(1)
 		go func(s IPRangeSource) {
 			sourceRanges := s.GetIPRanges()
+			sourceRanges = dedupRanges(sourceRanges)
 			rangeLock.Lock()
 			ranges = append(ranges, sourceRanges...)
 			rangeLock.Unlock()
@@ -63,4 +64,18 @@ func GetAllIPRanges(sources []IPRangeSource) []*IPRange {
 	}
 	wg.Wait()
 	return ranges
+}
+
+func dedupRanges(ranges []*IPRange) []*IPRange {
+	existingMap := make(map[string]interface{})
+	dedupedRanges := make([]*IPRange, 0)
+	for _, r := range ranges {
+		// If already seen, skip it
+		if _, ok := existingMap[r.String()]; ok {
+			continue
+		}
+		dedupedRanges = append(dedupedRanges, r)
+	}
+
+	return dedupedRanges
 }
