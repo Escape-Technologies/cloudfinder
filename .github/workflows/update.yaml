@@ -83,6 +83,8 @@ jobs:
 
       # Release
       - uses: goreleaser/goreleaser-action@v4
+        name: Release new patch
+        if: steps.git_diff.outputs.diff_exists == 'true'
         with:
           args: "release --clean"
           version: latest
