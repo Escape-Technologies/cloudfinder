@@ -15,6 +15,9 @@ import (
 	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
+// Version is injected during build
+var version string
+
 type args struct {
 	inputs chan string
 	debug  bool
@@ -77,7 +80,9 @@ func parseArgs() args {
 	a.mode = outputDefault
 	flag.BoolVar(&a.debug, "debug", false, "enable debug mode")
 
-	var json, raw, help bool
+	var showVersion, json, raw, help bool
+	flag.BoolVar(&showVersion, "version", false, "print version number")
+	flag.BoolVar(&showVersion, "v", false, "print version number")
 	flag.BoolVar(&json, "json", false, "output json")
 	flag.BoolVar(&raw, "raw", false, "output raw provider string")
 
@@ -88,6 +93,11 @@ func parseArgs() args {
 
 	if help {
 		printUsage()
+		os.Exit(0)
+	}
+
+	if showVersion {
+		fmt.Printf("%s\n", version)
 		os.Exit(0)
 	}
 

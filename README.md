@@ -24,6 +24,9 @@ Flags:
         output json
   -raw
         output raw provider string
+  -v    print version number
+  -version
+        print version number
 ```
 
 ## Examples
