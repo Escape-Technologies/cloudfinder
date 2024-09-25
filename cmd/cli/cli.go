@@ -161,6 +161,6 @@ func printOutput(input string, ip net.IP, p provider.Provider, mode outputMode) 
 		fmt.Println(marshallOutput(input, ip, p))
 	case outputRaw:
 		// Print to stdout
-		fmt.Println(p.String())
+		fmt.Printf("%s,%s,%s\n", input, ip.String(), p.String())
 	}
 }

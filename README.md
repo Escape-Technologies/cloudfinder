@@ -56,6 +56,23 @@ echo "escape.tech" | cloudfinder
 [15:07:43.573] INFO: escape.tech (13.36.180.15): Aws
 ```
 
+Output can also be raw text:
+
+```bash
+cloudfinder --raw escape.tech
+escape.tech,13.37.196.127,Aws
+escape.tech,13.39.28.216,Aws
+escape.tech,13.36.180.15,Aws
+```
+
+Or JSON:
+
+```bash
+cloudfinder --json escape.tech
+{"input":"escape.tech","ip":"13.37.196.127","provider":"Aws"}
+{"input":"escape.tech","ip":"13.36.180.15","provider":"Aws"}
+{"input":"escape.tech","ip":"13.39.28.216","provider":"Aws"}
+```
 
 ### Example: using with subfinder
 
@@ -79,7 +96,6 @@ subfinder -d "escape.tech" | cloudfinder --json | jq -s '.'
     "provider": "Vercel"
   }
 ]
-
 ```
 
 ## Go Package Usage
@@ -119,5 +135,4 @@ func main() {
   }
  }
 }
-
 ```
