@@ -1,0 +1,79 @@
+name: Update Ip Ranges
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight
+  workflow_dispatch:      # Allows manual triggering
+
+jobs:
+  update_ranges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # Keeps GitHub token for pushing changes
+
+      - name: Set up Git user
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Run pre-build
+        run: make pre-build
+
+      - name: Check for changes
+        id: git_diff
+        run: |
+          if git diff-index --quiet HEAD --; then
+            echo "diff_exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "diff_exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run build
+        if: steps.git_diff.outputs.diff_exists == 'true'
+        run: make build
+
+      - name: Commit changes
+        if: steps.git_diff.outputs.diff_exists == 'true'
+        run: |
+          git add -A
+          git commit -m "update ranges"
+
+      - name: Push changes to main branch
+        if: steps.git_diff.outputs.diff_exists == 'true'
+        run: git push origin main
+
+      - name: Get latest tag
+        if: steps.git_diff.outputs.diff_exists == 'true'
+        id: get_tag
+        run: |
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="0.0.0"
+          fi
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Calculate new tag
+        if: steps.git_diff.outputs.diff_exists == 'true'
+        id: new_tag
+        env:
+          LATEST_TAG: ${{ steps.get_tag.outputs.latest_tag }}
+        run: |
+          IFS='.' read -r major minor patch <<< "$LATEST_TAG"
+          major=${major:-0}
+          minor=${minor:-0}
+          patch=${patch:-0}
+          new_patch=$((patch + 1))
+          NEW_TAG="$major.$minor.$new_patch"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Push new tag
+        if: steps.git_diff.outputs.diff_exists == 'true'
+        env:
+          NEW_TAG: ${{ steps.new_tag.outputs.new_tag }}
+        run: |
+          git tag "$NEW_TAG"
+          git push origin "$NEW_TAG"

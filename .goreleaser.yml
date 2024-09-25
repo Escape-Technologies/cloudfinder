@@ -1,6 +1,6 @@
 # .goreleaser.yml
 project_name: cloudfinder
-
+version: 2
 builds:
   - id: cloudfinder_build
     main: ./cmd/cli
