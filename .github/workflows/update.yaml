@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      
+
       - uses: actions/setup-go@v4
         with:
           go-version: "1.22"
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           persist-credentials: true  # Keeps GitHub token for pushing changes
-      
+
       - name: Setup deps
         run: make setup
 
@@ -45,24 +45,11 @@ jobs:
         if: steps.git_diff.outputs.diff_exists == 'true'
         run: make build
 
-      - name: Commit changes
-        if: steps.git_diff.outputs.diff_exists == 'true'
-        run: |
-          git add -A
-          git commit -m "update ranges"
-
-      - name: Push changes to main branch
-        if: steps.git_diff.outputs.diff_exists == 'true'
-        run: git push origin main
-
       - name: Get latest tag
         if: steps.git_diff.outputs.diff_exists == 'true'
         id: get_tag
         run: |
-          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null)
-          if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="0.0.0"
-          fi
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Calculate new tag
@@ -79,10 +66,12 @@ jobs:
           NEW_TAG="$major.$minor.$new_patch"
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
-      - name: Push new tag
+      - name: Commit and push changes with new tag
         if: steps.git_diff.outputs.diff_exists == 'true'
         env:
           NEW_TAG: ${{ steps.new_tag.outputs.new_tag }}
         run: |
+          git add -A
+          git commit -m "chore: auto update IP ranges - $NEW_TAG"
           git tag "$NEW_TAG"
-          git push origin "$NEW_TAG"
+          git push origin main --tags
