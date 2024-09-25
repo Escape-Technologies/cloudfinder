@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           persist-credentials: true  # Keeps GitHub token for pushing changes
+          fetch-depth: 0              # Fetch all history for all tags and branches
 
       - name: Setup deps
         run: make setup
