@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 
-	"escape.tech/cloudfinder/pkg/provider"
+	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
 type IPCat int

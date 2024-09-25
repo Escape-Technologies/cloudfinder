@@ -10,10 +10,13 @@ import (
 	"net"
 	"os"
 
-	"escape.tech/cloudfinder/internal/log"
-	"escape.tech/cloudfinder/pkg/cloud"
-	"escape.tech/cloudfinder/pkg/provider"
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
+	"github.com/Escape-Technologies/cloudfinder/pkg/cloud"
+	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
+
+// Version is injected during build
+var version string
 
 type args struct {
 	inputs chan string
@@ -77,7 +80,9 @@ func parseArgs() args {
 	a.mode = outputDefault
 	flag.BoolVar(&a.debug, "debug", false, "enable debug mode")
 
-	var json, raw, help bool
+	var showVersion, json, raw, help bool
+	flag.BoolVar(&showVersion, "version", false, "print version number")
+	flag.BoolVar(&showVersion, "v", false, "print version number")
 	flag.BoolVar(&json, "json", false, "output json")
 	flag.BoolVar(&raw, "raw", false, "output raw provider string")
 
@@ -88,6 +93,11 @@ func parseArgs() args {
 
 	if help {
 		printUsage()
+		os.Exit(0)
+	}
+
+	if showVersion {
+		fmt.Printf("%s\n", version)
 		os.Exit(0)
 	}
 
@@ -118,7 +128,6 @@ func main() {
 		ips, err := getIPsForURL(context.Background(), i)
 		if err != nil {
 			log.Error("Failed to get ips, verify input", err)
-			os.Exit(1)
 		}
 
 		for _, ip := range ips {
@@ -158,8 +167,10 @@ func printOutput(input string, ip net.IP, p provider.Provider, mode outputMode) 
 	case outputDefault:
 		log.Info("%s (%s): %s", input, ip.String(), p.String())
 	case outputJson:
-		println(marshallOutput(input, ip, p))
+		// Print to stdout
+		fmt.Println(marshallOutput(input, ip, p))
 	case outputRaw:
-		println(p.String())
+		// Print to stdout
+		fmt.Printf("%s,%s,%s\n", input, ip.String(), p.String())
 	}
 }

@@ -4,8 +4,8 @@ import (
 	"encoding/csv"
 	"strings"
 
-	"escape.tech/cloudfinder/internal/log"
-	"escape.tech/cloudfinder/pkg/provider"
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
+	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
 type Digitalocean struct{}

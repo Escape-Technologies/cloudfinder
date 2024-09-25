@@ -225,7 +225,7 @@ func newPretty(handlerOptions *slog.HandlerOptions, options ...Option) *prettyHa
 }
 
 func newPrettyHandler(opts *slog.HandlerOptions) *prettyHandler {
-	return newPretty(opts, WithDestinationWriter(os.Stdout), WithColor(), WithOutputEmptyAttrs())
+	return newPretty(opts, WithDestinationWriter(os.Stderr), WithColor())
 }
 
 type Option func(h *prettyHandler)

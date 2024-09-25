@@ -3,8 +3,8 @@ package main
 import (
 	"net"
 
-	"escape.tech/cloudfinder/pkg/cloud"
-	"escape.tech/cloudfinder/pkg/provider"
+	"github.com/Escape-Technologies/cloudfinder/pkg/cloud"
+	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
 func main() {

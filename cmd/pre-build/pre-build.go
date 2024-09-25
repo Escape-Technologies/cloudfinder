@@ -8,9 +8,9 @@ import (
 
 	"crypto/sha256"
 
-	"escape.tech/cloudfinder/internal/log"
-	"escape.tech/cloudfinder/internal/source"
-	"escape.tech/cloudfinder/internal/tree"
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
+	"github.com/Escape-Technologies/cloudfinder/internal/source"
+	"github.com/Escape-Technologies/cloudfinder/internal/tree"
 )
 
 const (
