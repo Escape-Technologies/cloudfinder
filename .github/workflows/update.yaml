@@ -80,3 +80,11 @@ jobs:
           git commit -m "chore: auto update IP ranges - $NEW_TAG"
           git tag "$NEW_TAG"
           git push origin main --tags
+
+      # Release
+      - uses: goreleaser/goreleaser-action@v4
+        with:
+          args: "release --clean"
+          version: latest
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
