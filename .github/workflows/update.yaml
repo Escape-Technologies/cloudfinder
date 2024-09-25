@@ -1,5 +1,9 @@
 name: Update Ip Ranges
 
+permissions:
+  contents: write  # Ensure permissions to push changes and create tags
+  actions: write  # Allow triggering other workflows
+
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs every day at midnight
@@ -41,10 +45,10 @@ jobs:
             echo "diff_exists=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run build
+      - name: Lint, build, test before release
         if: steps.git_diff.outputs.diff_exists == 'true'
-        run: make build
-
+        run: make lint build test
+      
       - name: Get latest tag
         if: steps.git_diff.outputs.diff_exists == 'true'
         id: get_tag
