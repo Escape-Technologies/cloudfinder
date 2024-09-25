@@ -6,8 +6,8 @@ import (
 	"net"
 	"testing"
 
-	"escape.tech/cloudfinder/internal/log"
-	source "escape.tech/cloudfinder/internal/source"
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
+	source "github.com/Escape-Technologies/cloudfinder/internal/source"
 )
 
 func makeTreeHelper() *tree {

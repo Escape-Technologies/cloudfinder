@@ -3,8 +3,8 @@ package source
 import (
 	"errors"
 
-	"escape.tech/cloudfinder/internal/log"
-	"escape.tech/cloudfinder/pkg/provider"
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
+	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
 type Gcp struct{}

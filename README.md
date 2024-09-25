@@ -1,23 +1,90 @@
 # cloudfinder  
 
-Detect the cloud / hosting provider of a given IP. Fast, static & offline.  
+Detect the cloud / hosting provider of a given host. Fast, static & offline.  
 Cloudfinder offers both a cli and a golang package.
 
 ## CLI Usage
 
-Installing the binary:
-TODO
+### Installation
 
-From url:
-TODO
+Run install script: `curl -sSL https://raw.githubusercontent.com/Escape-Technologies/cloudfinder/main/install.sh | sh`
+Or directly download a [release](https://github.com/Escape-Technologies/cloudfinder/releases/latest).
 
-From cloned repository:  
-`go run cmd/cli/cli.go cmd/cli/dial.go <domain, ip, url, ...>`
+### Usage
 
-## PKG Usage
+```bash
+cloudfinder [flags] <ip, host, domain, url> <ip, host, domain, url> ...
+Flags:
+  -debug
+        enable debug mode
+  -h    print help
+  -help
+        print help
+  -json
+        output json
+  -raw
+        output raw provider string
+```
 
-Add dependency:
-TODO
+## Examples
+
+```bash
+cloudfinder escape.tech
+[15:06:39.755] INFO: escape.tech (13.39.28.216): Aws
+[15:06:39.756] INFO: escape.tech (13.37.196.127): Aws
+[15:06:39.756] INFO: escape.tech (13.36.180.15): Aws
+```
+
+You can provide multiple inputs:
+
+```bash
+cloudfinder escape.tech jobs.escape.tech
+[15:31:34.602] INFO: escape.tech (13.39.28.216): Aws
+[15:31:34.603] INFO: escape.tech (13.37.196.127): Aws
+[15:31:34.603] INFO: escape.tech (13.36.180.15): Aws
+[15:31:34.623] INFO: jobs.escape.tech (52.6.1.219): Aws
+[15:31:34.623] INFO: jobs.escape.tech (44.212.166.106): Aws
+[15:31:34.623] INFO: jobs.escape.tech (52.55.10.55): Aws
+```
+
+Or take the input from stdin:
+
+```bash
+echo "escape.tech" | cloudfinder 
+[15:07:43.573] INFO: escape.tech (13.39.28.216): Aws
+[15:07:43.573] INFO: escape.tech (13.37.196.127): Aws
+[15:07:43.573] INFO: escape.tech (13.36.180.15): Aws
+```
+
+
+### Example: using with subfinder
+
+You can pipe the output of external tools into cloudfinder. Here is an example using [subfinder](https://github.com/projectdiscovery/subfinder) to enumerate all subdomains of a given domain, and then finding their cloud providers.
+
+```bash
+# run subfinder pipe to cloudfinder and use jq to collect into a single json
+subfinder -d "escape.tech" | cloudfinder --json | jq -s '.'
+
+# You'll get errors on stderr for domains that are not exposed and you'll get on stdout:
+[
+  {
+    "input": "www.jobs.escape.tech",
+    "ip": "52.6.1.219",
+    "provider": "Aws"
+  },
+  # ...
+  {
+    "input": "www.docs.escape.tech",
+    "ip": "76.76.21.123",
+    "provider": "Vercel"
+  }
+]
+
+```
+
+## Go Package Usage
+
+Add dependency: `go get github.com/Escape-Technologies/cloudfinder@latest`
 
 Use cloudfinder:
 
@@ -27,8 +94,8 @@ package main
 import (
  "net"
 
- "escape.tech/cloudfinder/pkg/cloud"
- "escape.tech/cloudfinder/pkg/provider"
+ "github.com/Escape-Technologies/cloudfinder/pkg/cloud"
+ "github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
 func main() {
@@ -54,7 +121,3 @@ func main() {
 }
 
 ```
-
-## pre build
-
-`go run cmd/pre-build/pre-build.go`

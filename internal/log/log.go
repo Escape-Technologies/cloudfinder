@@ -106,7 +106,7 @@ func NewLogger(level slog.Level) *slog.Logger {
 	return slog.New(
 		handler{
 			slog.NewTextHandler(
-				os.Stdout,
+				os.Stderr,
 				&slog.HandlerOptions{
 					Level:       level,
 					ReplaceAttr: replaceAttr,

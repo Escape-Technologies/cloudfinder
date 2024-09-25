@@ -4,10 +4,10 @@ import (
 	"log/slog"
 	"net"
 
-	"escape.tech/cloudfinder/internal/log"
-	"escape.tech/cloudfinder/internal/static"
-	"escape.tech/cloudfinder/internal/tree"
-	"escape.tech/cloudfinder/pkg/provider"
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
+	"github.com/Escape-Technologies/cloudfinder/internal/static"
+	"github.com/Escape-Technologies/cloudfinder/internal/tree"
+	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
 
 type Resolver interface {
