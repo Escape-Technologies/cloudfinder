@@ -49,7 +49,7 @@ jobs:
         if: steps.git_diff.outputs.changes == 'true'
         id: get_tag
         run: |
-          LATEST_TAG=$(make get-version)
+          LATEST_TAG="v$(make get-version)"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Calculate new tag
