@@ -39,26 +39,21 @@ jobs:
 
       - name: Check for changes
         id: git_diff
-        run: |
-          if git diff-index --quiet HEAD --; then
-            echo "diff_exists=false" >> $GITHUB_OUTPUT
-          else
-            echo "diff_exists=true" >> $GITHUB_OUTPUT
-          fi
+        run: git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Lint, build, test before release
-        if: steps.git_diff.outputs.diff_exists == 'true'
+        if: steps.git_diff.outputs.changes == 'true'
         run: make lint build test
       
       - name: Get latest tag
-        if: steps.git_diff.outputs.diff_exists == 'true'
+        if: steps.git_diff.outputs.changes == 'true'
         id: get_tag
         run: |
           LATEST_TAG=$(make get-version)
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Calculate new tag
-        if: steps.git_diff.outputs.diff_exists == 'true'
+        if: steps.git_diff.outputs.changes == 'true'
         id: new_tag
         env:
           LATEST_TAG: ${{ steps.get_tag.outputs.latest_tag }}
@@ -72,7 +67,7 @@ jobs:
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes with new tag
-        if: steps.git_diff.outputs.diff_exists == 'true'
+        if: steps.git_diff.outputs.changes == 'true'
         env:
           NEW_TAG: ${{ steps.new_tag.outputs.new_tag }}
         run: |
@@ -84,7 +79,7 @@ jobs:
       # Release
       - uses: goreleaser/goreleaser-action@v4
         name: Release new patch
-        if: steps.git_diff.outputs.diff_exists == 'true'
+        if: steps.git_diff.outputs.changes == 'true'
         with:
           args: "release --clean"
           version: latest
