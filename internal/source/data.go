@@ -21,8 +21,8 @@ type IPRange struct {
 	Provider provider.Provider `json:"p"`
 }
 
-func (ip *IPRange) String() string {
-	return ip.Network.String() + fmt.Sprint(ip.Cat) + ip.Provider.String()
+func (r *IPRange) String() string {
+	return r.Network.String() + fmt.Sprint(r.Cat) + r.Provider.String()
 }
 
 type IPRangeSource interface {
@@ -75,7 +75,12 @@ func dedupRanges(ranges []*IPRange) []*IPRange {
 			continue
 		}
 		dedupedRanges = append(dedupedRanges, r)
+		existingMap[r.String()] = struct{}{}
 	}
 
 	return dedupedRanges
+}
+
+func (r *IPRange) Overlaps() {
+
 }

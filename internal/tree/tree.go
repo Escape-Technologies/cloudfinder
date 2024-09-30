@@ -83,8 +83,6 @@ func (t *tree) Add(ipRange *source.IPRange) {
 	}
 
 	if matchingRange := t.FindIPRange(ipRange.Network.IP); matchingRange != nil {
-		log.Debug("[Skip] - IP range %s overlaps with existing ip range %s", ipRange.Network.String(), matchingRange.Network.String())
-
 		if matchingRange.Provider != ipRange.Provider {
 			log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has different provider %s", ipRange.Network.String(), matchingRange.Network.String(), ipRange.Provider.String())
 			return

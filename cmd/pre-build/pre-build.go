@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
+	"flag"
 	"fmt"
 	"os"
-	"slices"
 	"sort"
+	"strings"
 
 	"crypto/sha256"
 
@@ -29,8 +31,7 @@ func byteCountSI(b int64) string {
 		div *= unit
 		exp++
 	}
-	return fmt.Sprintf("%.1f %cB",
-		float64(b)/float64(div), "kMGTPE"[exp])
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp])
 }
 
 func writeTree(tree tree.Tree, path string) {
@@ -51,25 +52,74 @@ func writeTree(tree tree.Tree, path string) {
 	log.Info("Wrote tree to %s (size: %s)", f.Name(), size)
 }
 
+// Write the ranges per provider under the given directory
+func writeRangesToDir(sortedRanges []*source.IPRange, rangesDir string) {
+	// Check if ranges dir exists, if not create it
+	if _, err := os.Stat(rangesDir); os.IsNotExist(err) {
+		err = os.Mkdir(rangesDir, os.ModePerm)
+		if err != nil {
+			log.Fatal("Failed to create ranges dir", err)
+		}
+	}
+
+	// Map ranges per provider
+	rangesPerProvider := make(map[string][]*source.IPRange)
+	for _, r := range sortedRanges {
+		providerKey := strings.ToLower(r.Provider.String())
+		rangesPerProvider[providerKey] = append(rangesPerProvider[providerKey], r)
+	}
+
+	// Write ranges to files
+	for provider, ranges := range rangesPerProvider {
+		fileContents := strings.Builder{}
+		for _, r := range ranges {
+			// TODO: write r.Newtwork.String() instead of r.String()
+			fileContents.WriteString(r.String())
+			fileContents.WriteString("\n")
+		}
+
+		filePath := fmt.Sprintf("%s/%s.txt", rangesDir, provider)
+		err := os.WriteFile(filePath, []byte(fileContents.String()), os.ModePerm)
+		if err != nil {
+			log.Fatal("Failed to write ranges file", err)
+		}
+	}
+}
+
+func computeRangesHash(sortedRanges []*source.IPRange) string {
+	h := sha256.New()
+	for _, r := range sortedRanges {
+		h.Write([]byte(r.String()))
+	}
+	hash := h.Sum(nil)
+	return hex.EncodeToString(hash)
+}
+
 // Fetches ip range sources & generates the ip range data file & tree data file
 func main() {
-	// Fetch ranges
-	ranges := source.GetAllIPRanges(source.AllSources)
+	var writeRanges string
+	flag.StringVar(&writeRanges, "write-ranges", "", "optionnaly store the ranges in a directory")
+	flag.Parse()
 
-	// Sort ranges per string repr
+	// Fetch ranges then sort
+	ranges := source.GetAllIPRanges(source.AllSources)
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i].String() > ranges[j].String()
+	})
+
+	if writeRanges != "" {
+		writeRangesToDir(ranges, writeRanges)
+		log.Info("Wrote ranges to %s", writeRanges)
+	}
+
 	rangesStr := make([]string, len(ranges))
 	for i, r := range ranges {
 		rangesStr[i] = r.String()
 	}
-	sort.Strings(rangesStr)
 
 	// Compute the hash of the rangesStr
-	h := sha256.New()
-	for _, r := range rangesStr {
-		h.Write([]byte(r))
-	}
-	hash := h.Sum(nil)
-	log.Info("Hash of ip ranges: %x", hash)
+	hash := computeRangesHash(ranges)
+	log.Info("Hash of ip ranges: %s", hash)
 
 	// Compare to previous hash
 	prevHash, err := os.ReadFile(ipRangesHashPath)
@@ -77,13 +127,13 @@ func main() {
 		log.Fatal("Failed to read hash", err)
 	}
 
-	if slices.Equal(hash, prevHash) {
-		log.Info("Ip ranges have not changed (ip ranges hashes are the same), skipping")
+	if hash == string(prevHash) {
+		log.Info("Ip ranges have not changed (same hash), skipping")
 		return
 	}
 
 	// Write new hash to disk
-	err = os.WriteFile(ipRangesHashPath, hash, 0644) // nolint: mnd
+	err = os.WriteFile(ipRangesHashPath, []byte(hash), 0644) // nolint: mnd
 	if err != nil {
 		log.Fatal("Failed to write hash", err)
 	}
