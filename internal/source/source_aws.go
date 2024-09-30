@@ -17,6 +17,10 @@ type awsJSON struct {
 	} `json:"prefixes"`
 }
 
+func (a Aws) GetProvider() provider.Provider {
+	return provider.Aws
+}
+
 func (a Aws) GetIPRanges() []*IPRange {
 	log.Info("Fetching AWS ip ranges from %s", awsFileURL)
 
@@ -30,9 +34,8 @@ func (a Aws) GetIPRanges() []*IPRange {
 	for _, prefix := range awsJSON.Prefixes {
 		network, cat := ParseCIDR(prefix.IPPrefix)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Aws,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 

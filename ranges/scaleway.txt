@@ -2,7 +2,6 @@
 62.210.0.0/164Scaleway
 51.158.128.0/174Scaleway
 51.158.0.0/154Scaleway
-51.15.0.0/174Scaleway
 51.15.0.0/164Scaleway
 212.83.160.0/194Scaleway
 212.83.128.0/194Scaleway

@@ -10,7 +10,7 @@ all: lint generate pre-build build test
 # Install deps
 .PHONY: setup
 setup:
-	go install golang.org/x/tools/cmd/stringer@latest
+	go install github.com/abice/go-enum@latest
 
 .PHONY: lint
 lint: 

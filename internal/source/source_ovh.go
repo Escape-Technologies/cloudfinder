@@ -7,6 +7,7 @@ import (
 
 type Ovh struct{}
 
+// TODO: Dynamically fetch the sources
 // Source: https://ipinfo.io/AS16276#block-ranges
 var ovhRanges = [...]string{
 	"135.125.0.0/17",
@@ -65,6 +66,10 @@ var ovhRanges = [...]string{
 	"193.70.0.0/17",
 }
 
+func (a Ovh) GetProvider() provider.Provider {
+	return provider.Ovh
+}
+
 func (a Ovh) GetIPRanges() []*IPRange {
 	log.Info("Using static ovh ip ranges")
 
@@ -72,9 +77,8 @@ func (a Ovh) GetIPRanges() []*IPRange {
 	for _, cdir := range ovhRanges {
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Ovh,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 

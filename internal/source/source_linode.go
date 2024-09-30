@@ -9,6 +9,10 @@ type Linode struct{}
 
 const LinodeFileURL = "https://raw.githubusercontent.com/devanshbatham/ip2cloud/main/data/linode.txt"
 
+func (a Linode) GetProvider() provider.Provider {
+	return provider.Linode
+}
+
 func (a Linode) GetIPRanges() []*IPRange {
 	log.Info("Using static Linode ip ranges")
 
@@ -20,9 +24,8 @@ func (a Linode) GetIPRanges() []*IPRange {
 	for _, cdir := range linodeRanges {
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Linode,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 	return ranges

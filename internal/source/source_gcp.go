@@ -21,6 +21,10 @@ type gcpJSON struct {
 	} `json:"prefixes"`
 }
 
+func (a Gcp) GetProvider() provider.Provider {
+	return provider.Gcp
+}
+
 func (a Gcp) GetIPRanges() []*IPRange {
 	ranges := make([]*IPRange, 0)
 
@@ -45,9 +49,8 @@ func (a Gcp) GetIPRanges() []*IPRange {
 
 			network, cat := ParseCIDR(cdir)
 			ranges = append(ranges, &IPRange{
-				Network:  network,
-				Cat:      cat,
-				Provider: provider.Gcp,
+				Network: network,
+				Cat:     cat,
 			})
 		}
 	}

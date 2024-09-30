@@ -17,6 +17,10 @@ type oracleJSON struct {
 	} `json:"regions"`
 }
 
+func (a Oracle) GetProvider() provider.Provider {
+	return provider.Oracle
+}
+
 func (a Oracle) GetIPRanges() []*IPRange {
 	log.Info("Using static Oracle ip ranges")
 	var oracleJSON oracleJSON
@@ -30,9 +34,8 @@ func (a Oracle) GetIPRanges() []*IPRange {
 		for _, cidrs := range region.Cidrs {
 			network, cat := ParseCIDR(cidrs.Cidr)
 			ranges = append(ranges, &IPRange{
-				Network:  network,
-				Cat:      cat,
-				Provider: provider.Oracle,
+				Network: network,
+				Cat:     cat,
 			})
 		}
 	}

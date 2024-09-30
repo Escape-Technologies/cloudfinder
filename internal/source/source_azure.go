@@ -14,6 +14,10 @@ import (
 
 type Azure struct{}
 
+func (a Azure) GetProvider() provider.Provider {
+	return provider.Azure
+}
+
 type azureJSON struct {
 	Values []struct {
 		Properties struct {
@@ -90,9 +94,8 @@ func (a Azure) GetIPRanges() []*IPRange {
 	for _, prefix := range prefixes {
 		network, cat := ParseCIDR(prefix)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Azure,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 

@@ -9,6 +9,10 @@ type Ibm struct{}
 
 const ibmFileURL = "https://raw.githubusercontent.com/devanshbatham/ip2cloud/main/data/ibm.txt"
 
+func (a Ibm) GetProvider() provider.Provider {
+	return provider.Ibm
+}
+
 func (a Ibm) GetIPRanges() []*IPRange {
 	log.Info("Using static Ibm ip ranges")
 
@@ -20,9 +24,8 @@ func (a Ibm) GetIPRanges() []*IPRange {
 	for _, cdir := range ibmRanges {
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Ibm,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 	return ranges

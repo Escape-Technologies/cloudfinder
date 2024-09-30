@@ -12,6 +12,10 @@ type Digitalocean struct{}
 
 const doFileURL = "https://digitalocean.com/geo/google.csv"
 
+func (a Digitalocean) GetProvider() provider.Provider {
+	return provider.Digitalocean
+}
+
 func (a Digitalocean) GetIPRanges() []*IPRange {
 	log.Info("Fetching do ip ranges from %s", doFileURL)
 
@@ -29,9 +33,8 @@ func (a Digitalocean) GetIPRanges() []*IPRange {
 		cdir := line[0]
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Digitalocean,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 

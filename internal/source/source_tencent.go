@@ -9,6 +9,10 @@ type Tencent struct{}
 
 const tencentFileURL = "https://raw.githubusercontent.com/devanshbatham/ip2cloud/main/data/tencent.txt"
 
+func (a Tencent) GetProvider() provider.Provider {
+	return provider.Tencent
+}
+
 func (a Tencent) GetIPRanges() []*IPRange {
 	log.Info("Using static Tencent ip ranges")
 
@@ -20,9 +24,8 @@ func (a Tencent) GetIPRanges() []*IPRange {
 	for _, cdir := range tencentRanges {
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Tencent,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 	return ranges
