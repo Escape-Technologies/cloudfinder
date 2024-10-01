@@ -2,6 +2,7 @@
 
 Detect the cloud / hosting provider of a given host. Fast, static & offline.  
 Cloudfinder offers both a cli and a golang package.
+Cloud provider ranges are also tracked and can be found in `./ranges`.
 
 ## CLI Usage
 

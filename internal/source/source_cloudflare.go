@@ -14,6 +14,10 @@ var cloudflareFileUrls = []string{
 	"https://www.cloudflare.com/ips-v6/#",
 }
 
+func (a Cloudflare) GetProvider() provider.Provider {
+	return provider.Cloudflare
+}
+
 func (a Cloudflare) GetIPRanges() []*IPRange {
 	ranges := make([]*IPRange, 0)
 	for _, cloudflareFileURL := range cloudflareFileUrls {
@@ -31,9 +35,8 @@ func (a Cloudflare) GetIPRanges() []*IPRange {
 			}
 			network, cat := ParseCIDR(ip)
 			ranges = append(ranges, &IPRange{
-				Network:  network,
-				Cat:      cat,
-				Provider: provider.Cloudflare,
+				Network: network,
+				Cat:     cat,
 			})
 		}
 	}

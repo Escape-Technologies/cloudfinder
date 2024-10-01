@@ -7,6 +7,11 @@ import (
 
 type Vercel struct{}
 
+func (a Vercel) GetProvider() provider.Provider {
+	return provider.Vercel
+}
+
+// TODO: Get this range dynamically
 // Source: https://networksdb.io/ip-addresses-of/vercel-inc
 const vercelRange = "76.76.21.0/24"
 

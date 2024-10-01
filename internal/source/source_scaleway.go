@@ -26,6 +26,10 @@ var scalewayRanges = [...]string{
 	"62.4.0.0/19",
 }
 
+func (a Scaleway) GetProvider() provider.Provider {
+	return provider.Scaleway
+}
+
 func (a Scaleway) GetIPRanges() []*IPRange {
 	log.Info("Using static Scaleway ip ranges")
 
@@ -33,9 +37,8 @@ func (a Scaleway) GetIPRanges() []*IPRange {
 	for _, cdir := range scalewayRanges {
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Scaleway,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 

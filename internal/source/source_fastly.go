@@ -14,6 +14,10 @@ type FastlyIPRangeResponse struct {
 	IPv6Addresses []string `json:"ipv6_addresses"`
 }
 
+func (a Fastly) GetProvider() provider.Provider {
+	return provider.Fastly
+}
+
 func (a Fastly) GetIPRanges() []*IPRange {
 	log.Info("Using static Fastly ip ranges")
 
@@ -28,9 +32,8 @@ func (a Fastly) GetIPRanges() []*IPRange {
 	for _, cdir := range fastlyRanges.Addresses {
 		network, cat := ParseCIDR(cdir)
 		ranges = append(ranges, &IPRange{
-			Network:  network,
-			Cat:      cat,
-			Provider: provider.Fastly,
+			Network: network,
+			Cat:     cat,
 		})
 	}
 	return ranges

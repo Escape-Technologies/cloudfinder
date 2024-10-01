@@ -1,23 +1,27 @@
-//go:generate stringer -type=Provider
+//go:generate go-enum --marshal --noprefix --nocomments
 package provider
 
+/*
+ENUM(
+Unknown
+Aws
+Alibaba
+Azure
+Cloudflare
+Digitalocean
+Fastly
+Gcp
+Ibm
+Linode
+Oracle
+Ovh
+Scaleway
+Tencent
+Ucloud
+Vercel
+)
+*/
 type Provider int
 
-const (
-	Unknown Provider = iota
-	Aws
-	Alibaba
-	Azure
-	Cloudflare
-	Digitalocean
-	Fastly
-	Gcp
-	Ibm
-	Linode
-	Oracle
-	Ovh
-	Scaleway
-	Tencent
-	Ucloud
-	Vercel
-)
+// re-export ProviderMap
+var ProviderMap = _ProviderMap
