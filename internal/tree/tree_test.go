@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"net"
+	"slices"
 	"testing"
 
 	"github.com/Escape-Technologies/cloudfinder/internal/log"
@@ -41,40 +42,6 @@ func makeTreeHelper() *tree {
 	return tree
 }
 
-func TestFindClosestLowerDefinedChild(t *testing.T) {
-	childs := make(map[uint8]*node)
-	childs[0] = nil
-	childs[1] = nil
-	childs[2] = &node{}
-	childs[3] = nil
-	childs[4] = &node{}
-
-	tests := []struct {
-		input       byte
-		expected    byte
-		shouldError bool
-	}{
-		{0, 0, true},
-		{1, 0, true},
-		{2, 2, false},
-		{3, 2, false},
-		{4, 4, false},
-	}
-
-	for _, test := range tests {
-		index, err := findClosestLowerDefinedChildIndex(test.input, childs)
-		if err != nil && !test.shouldError {
-			t.Errorf("Expected no error result for %d", test.input)
-		}
-		if err == nil && test.shouldError {
-			t.Errorf("Expected error for %d", test.input)
-		}
-		if index != test.expected {
-			t.Errorf("Expected index %d, got %d", test.expected, index)
-		}
-	}
-}
-
 func TestNetworkIp(t *testing.T) {
 	_, network, err := net.ParseCIDR("0.0.0.2/24")
 	if err != nil {
@@ -83,81 +50,6 @@ func TestNetworkIp(t *testing.T) {
 
 	if network.IP.String() != net.ParseIP("0.0.0.0").String() {
 		t.Errorf("Expected network IP to be 0.0.0.0, got %s", network.IP.String())
-	}
-}
-
-func TestFindClosestLowerDefinedChildFor0Defined(t *testing.T) {
-	childs := make(map[uint8]*node)
-	childs[0] = &node{}
-	childs[1] = nil
-	childs[2] = nil
-	childs[3] = nil
-	childs[4] = &node{}
-
-	tests := []struct {
-		input       byte
-		expected    byte
-		shouldError bool
-	}{
-		{0, 0, false},
-		{1, 0, false},
-		{2, 0, false},
-		{3, 0, false},
-		{4, 4, false},
-	}
-
-	for _, test := range tests {
-		index, err := findClosestLowerDefinedChildIndex(test.input, childs)
-		if err != nil && !test.shouldError {
-			t.Errorf("Expected no error result for %d", test.input)
-		}
-		if err == nil && test.shouldError {
-			t.Errorf("Expected error for %d", test.input)
-		}
-		if index != test.expected {
-			t.Errorf("Expected index %d, got %d", test.expected, index)
-		}
-	}
-}
-
-func TestAddToNode(t *testing.T) {
-	n := newNode()
-	ipRange := &source.IPRange{}
-	bytes := []byte{1, 2, 3, 4}
-	n.add(bytes, ipRange)
-
-	if n.Nodes[0] != nil {
-		t.Errorf("Expected node to be nil")
-	}
-
-	leaf := n.Nodes[1].Nodes[2].Nodes[3].Nodes[4]
-	if leaf == nil {
-		t.Errorf("Expected leaf to be non-nil")
-	}
-}
-
-func TestFindInNode(t *testing.T) {
-	n := newNode()
-	ipRange := &source.IPRange{}
-	bytes := []byte{1, 2, 3, 4}
-	n.add(bytes, ipRange)
-
-	// should find the exact leaf
-	result := n.find(bytes, false)
-	if result != ipRange {
-		t.Errorf("Expected result to be %v, got %v", ipRange, result)
-	}
-
-	// should find the closest lower leaf
-	result = n.find([]byte{1, 2, 3, 5}, false)
-	if result != ipRange {
-		t.Errorf("Expected result to be %v, got %v", ipRange, result)
-	}
-
-	// should not find anything
-	result = n.find([]byte{1, 2, 3, 1}, false)
-	if result != nil {
-		t.Errorf("Expected result to be nil, got %v", result)
 	}
 }
 
@@ -202,7 +94,13 @@ func TestIPv4Tree(t *testing.T) {
 	}
 }
 
-// @todo test ipv6 tree
+func TestGetAllRanges(t *testing.T) {
+	tree := makeTreeHelper()
+	t1ranges := tree.GetAllRanges()
+	if len(t1ranges) != 2 {
+		t.Errorf("Expected tree2 to have 2 ranges")
+	}
+}
 
 func TestSerializeAndLoad(t *testing.T) {
 	tree := makeTreeHelper()
@@ -215,6 +113,12 @@ func TestSerializeAndLoad(t *testing.T) {
 
 	tree2 := NewTreeFrom(buffer, source.CatIPv4)
 
+	t1ranges := tree.GetAllRanges()
+	t2ranges := tree2.GetAllRanges()
+	if len(t1ranges) != len(t2ranges) {
+		t.Errorf("Expected tree2 to have %d ranges", len(t1ranges))
+	}
+
 	testIP := net.ParseIP("3.5.141.2")
 	if tree.FindIPRange(testIP) == nil {
 		t.Errorf("Expected tree1 to contain range for %s", testIP)
@@ -224,4 +128,72 @@ func TestSerializeAndLoad(t *testing.T) {
 	}
 }
 
-// @todo test overlapping ranges
+func cdirsToRanges(cdirs []string) []*source.IPRange {
+	ranges := make([]*source.IPRange, 0)
+	for _, c := range cdirs {
+		net, cat := source.ParseCIDR(c)
+		ranges = append(ranges, &source.IPRange{
+			Network: net,
+			Cat:     cat,
+		})
+	}
+	return ranges
+}
+
+func rangesToCdirs(ranges []*source.IPRange) []string {
+	cdirs := make([]string, 0)
+	for _, r := range ranges {
+		cdirs = append(cdirs, r.Network.String())
+	}
+	return cdirs
+}
+
+func TestOverlapCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		ranges   []string
+		expected []string
+	}{
+		{
+			name:     "not starting ip",
+			ranges:   []string{"1.2.3.4/24"},
+			expected: []string{"1.2.3.0/24"},
+		},
+		{
+			name:     "same networks",
+			ranges:   []string{"1.2.0.0/24", "1.2.0.0/24"},
+			expected: []string{"1.2.0.0/24"},
+		},
+		{
+			name:     "different networks",
+			ranges:   []string{"255.255.0.0/16", "1.2.3.0/24"},
+			expected: []string{"255.255.0.0/16", "1.2.3.0/24"},
+		},
+		{
+			name:     "overlapping networks",
+			ranges:   []string{"1.2.3.0/24", "1.2.0.0/16"},
+			expected: []string{"1.2.0.0/16"},
+		},
+		{
+			name:     "overlapping networks (reversed)",
+			ranges:   []string{"1.2.0.0/16", "1.2.3.0/24"},
+			expected: []string{"1.2.0.0/16"},
+		},
+	}
+
+	for _, tt := range tests {
+		ranges := cdirsToRanges(tt.ranges)
+		tree := NewIPv4Tree()
+		for _, r := range ranges {
+			tree.Add(r)
+		}
+
+		gotRanges := tree.GetAllRanges()
+		gotCdirs := rangesToCdirs(gotRanges)
+		slices.Sort(gotCdirs)
+		slices.Sort(tt.expected)
+		if !slices.Equal(gotCdirs, tt.expected) {
+			t.Errorf("[%s] Got %+v, Expected: %+v", tt.name, gotCdirs, tt.expected)
+		}
+	}
+}

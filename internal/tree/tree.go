@@ -2,34 +2,13 @@ package tree
 
 import (
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 
 	"github.com/Escape-Technologies/cloudfinder/internal/log"
-	source "github.com/Escape-Technologies/cloudfinder/internal/source"
+	"github.com/Escape-Technologies/cloudfinder/internal/source"
 )
-
-func findClosestLowerDefinedChildIndex(i byte, childs map[uint8]*node) (uint8, error) {
-	if childs == nil {
-		return 0, errors.New("no lower defined child")
-	}
-
-	if len(childs) == 0 {
-		return 0, errors.New("no lower defined child")
-	}
-
-	for i := i; i > 0; i-- {
-		if childs[i] != nil {
-			return i, nil
-		}
-	}
-	if childs[0] != nil {
-		return 0, nil
-	}
-	return 0, errors.New("no lower defined child")
-}
 
 // This package implements a segement tree for ip ranges, that can be saved & loaded to/from a file at build time.
 type Tree interface {
@@ -41,6 +20,9 @@ type Tree interface {
 
 	// Serialize the tree to a buffer.
 	SerializeTo(w io.Writer)
+
+	// Get all ranges stored in tree, after duduplication ...
+	GetAllRanges() []*source.IPRange
 }
 
 type tree struct {
@@ -49,8 +31,8 @@ type tree struct {
 }
 
 type node struct {
-	// Child Nodes
-	Nodes map[uint8]*node `json:"n"`
+	// Child Nodes. Size is always 2 (0 and 1), but a [2] array won't work as it will contain nil values. This is less space efficient, but serializable
+	Nodes map[byte]*node `json:"n"`
 
 	// The ip range for this node, nil if not a leaf.
 	IPRange *source.IPRange `json:"i"`
@@ -73,7 +55,7 @@ func NewIPv6Tree() Tree {
 
 func newNode() *node {
 	return &node{
-		Nodes: make(map[uint8]*node),
+		Nodes: make(map[byte]*node),
 	}
 }
 
@@ -82,74 +64,61 @@ func (t *tree) Add(ipRange *source.IPRange) {
 		log.Fatal("Invalid IP category", fmt.Errorf("%d != %d", ipRange.Cat, t.Cat))
 	}
 
-	if matchingRange := t.FindIPRange(ipRange.Network.IP); matchingRange != nil {
-		if matchingRange.Provider != ipRange.Provider {
-			log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has different provider %s", ipRange.Network.String(), matchingRange.Network.String(), ipRange.Provider.String())
-			return
-		}
-		ms, _ := matchingRange.Network.Mask.Size()
-		is, _ := ipRange.Network.Mask.Size()
-		if ms < is {
-			log.Info("[Skip] - IP range %s overlaps with existing ip range %s, but has larger mask, skipping", ipRange.Network.String(), matchingRange.Network.String())
-			return
-		}
-	}
-
-	var ip []byte
+	var ip net.IP
 	if ipRange.Cat == source.CatIPv4 {
 		ip = ipRange.Network.IP.To4()
 	} else {
 		ip = ipRange.Network.IP.To16()
 	}
 
-	t.Root.add(ip, ipRange)
+	prefixLen, _ := ipRange.Network.Mask.Size()
+
+	t.Root.add(ip, prefixLen, ipRange, 0)
 }
 
-// Add a new IpRange to the tree.
-func (n *node) add(ipBytes []byte, ipRange *source.IPRange) {
-	if len(ipBytes) == 0 {
-		n.IPRange = ipRange
+func (n *node) add(ip net.IP, prefixLen int, ipRange *source.IPRange, bitIndex int) {
+	if n.IPRange != nil {
+		// A larger network already exists; skip adding
 		return
 	}
-	_byte := ipBytes[0]
-	ipBytes = ipBytes[1:]
-	if n.Nodes[_byte] == nil {
-		n.Nodes[_byte] = newNode()
+
+	if bitIndex >= prefixLen {
+		// Reached the node corresponding to the prefix length
+		n.IPRange = ipRange
+		n.Nodes = make(map[byte]*node) // Prune any subtrees
+		return
 	}
-	n.Nodes[_byte].add(ipBytes, ipRange)
+
+	// Get the bit at the current index
+	byteIndex := bitIndex / 8       // nolint:mnd
+	bitOffset := 7 - (bitIndex % 8) // nolint:mnd
+	bit := (ip[byteIndex] >> bitOffset) & 1
+
+	if _, ok := n.Nodes[bit]; !ok {
+		n.Nodes[bit] = newNode()
+	}
+
+	n.Nodes[bit].add(ip, prefixLen, ipRange, bitIndex+1)
 }
 
-// Find the IpRange for a given ip, returns nil if none matches.
-// When in fallback mode, this will try to take the highest defined IP range.
-func (n *node) find(ipBytes []byte, fallbackMode bool) *source.IPRange {
-	if len(ipBytes) == 0 {
+func (n *node) find(ip net.IP, bitIndex int) *source.IPRange {
+	if n.IPRange != nil {
 		return n.IPRange
 	}
-	_byte := ipBytes[0]
-	if fallbackMode {
-		// if we are in fallback mode, we want to take the highest defined IP range
-		_byte = 255
-	}
-	ipBytes = ipBytes[1:]
-	closestChildIndex, err := findClosestLowerDefinedChildIndex(_byte, n.Nodes)
-	// no lower defined child, return nil
-	if err != nil {
+
+	if bitIndex >= len(ip)*8 {
 		return nil
 	}
 
-	// enable fallback mode if we have no exact match (and not already in fallback mode)
-	if !fallbackMode && closestChildIndex != _byte {
-		fallbackMode = true
+	byteIndex := bitIndex / 8       // nolint:mnd
+	bitOffset := 7 - (bitIndex % 8) // nolint:mnd
+	bit := (ip[byteIndex] >> bitOffset) & 1
+
+	if _, ok := n.Nodes[bit]; !ok {
+		return nil
 	}
 
-	if n.Nodes[closestChildIndex] == nil {
-		log.Fatal("Should not happen", errors.New("value at closest child index is nil"))
-	}
-	return n.Nodes[closestChildIndex].find(ipBytes, fallbackMode)
-}
-
-func (t *tree) findClosestIPRange(ipBytes []byte) *source.IPRange {
-	return t.Root.find(ipBytes, false)
+	return n.Nodes[bit].find(ip, bitIndex+1)
 }
 
 func (t *tree) FindIPRange(ip net.IP) *source.IPRange {
@@ -160,16 +129,30 @@ func (t *tree) FindIPRange(ip net.IP) *source.IPRange {
 		correctCatIP = ip.To16()
 	}
 
-	closestIPRange := t.findClosestIPRange(correctCatIP)
-	if closestIPRange == nil {
-		return nil
+	return t.Root.find(correctCatIP, 0)
+}
+
+func (n *node) walk() []*source.IPRange {
+	ranges := []*source.IPRange{}
+
+	// Safeguard, shoud not happen
+	if n == nil {
+		return ranges
 	}
 
-	if closestIPRange.Network.Contains(ip) {
-		return closestIPRange
+	if n.IPRange != nil {
+		ranges = append(ranges, n.IPRange)
 	}
 
-	return nil
+	for _, leaf := range n.Nodes {
+		ranges = append(ranges, leaf.walk()...)
+	}
+
+	return ranges
+}
+
+func (t *tree) GetAllRanges() []*source.IPRange {
+	return t.Root.walk()
 }
 
 func (t *tree) SerializeTo(w io.Writer) {

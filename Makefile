@@ -21,7 +21,7 @@ generate:
 
 .PHONY: pre-build
 pre-build: generate
-	go run cmd/pre-build/pre-build.go
+	go run cmd/pre-build/pre-build.go --write-ranges ranges
 
 .PHONY: build
 build: pre-build generate
