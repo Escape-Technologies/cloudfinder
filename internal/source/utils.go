@@ -107,3 +107,24 @@ func LoadTextURLToRange(url string) ([]string, error) {
 	}
 	return strings.Split(string(body), "\n"), nil
 }
+
+func isPrivateNetwork(n *net.IPNet) bool {
+	// Source: https://en.wikipedia.org/wiki/Private_network
+	for _, cdir := range []string{
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+		"100.64.0.0/10",
+		"fc00::/7",
+	} {
+		_, pn, err := net.ParseCIDR(cdir)
+		if err != nil {
+			panic(err)
+		}
+
+		if pn.Contains(n.IP) {
+			return true
+		}
+	}
+	return false
+}
