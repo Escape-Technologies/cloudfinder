@@ -30,8 +30,8 @@ func (a Digitalocean) GetIPRanges() []*IPRange {
 
 	ranges := make([]*IPRange, 0)
 	for _, line := range data {
-		cdir := line[0]
-		network, cat := ParseCIDR(cdir)
+		cidr := line[0]
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,

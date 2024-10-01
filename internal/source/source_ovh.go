@@ -74,8 +74,8 @@ func (a Ovh) GetIPRanges() []*IPRange {
 	log.Info("Using static ovh ip ranges")
 
 	ranges := make([]*IPRange, 0)
-	for _, cdir := range ovhRanges {
-		network, cat := ParseCIDR(cdir)
+	for _, cidr := range ovhRanges {
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,

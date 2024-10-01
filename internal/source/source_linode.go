@@ -21,8 +21,8 @@ func (a Linode) GetIPRanges() []*IPRange {
 	if err != nil {
 		log.Fatal("Failed to load text url to range for Linode", err)
 	}
-	for _, cdir := range linodeRanges {
-		network, cat := ParseCIDR(cdir)
+	for _, cidr := range linodeRanges {
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,

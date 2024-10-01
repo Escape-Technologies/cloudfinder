@@ -38,16 +38,16 @@ func (a Gcp) GetIPRanges() []*IPRange {
 		}
 
 		for _, prefix := range gcpJSON.Prefixes {
-			cdir := prefix.IPv4Prefix
-			if cdir == "" {
-				cdir = prefix.IPv6Prefix
+			cidr := prefix.IPv4Prefix
+			if cidr == "" {
+				cidr = prefix.IPv6Prefix
 			}
 
-			if cdir == "" {
+			if cidr == "" {
 				log.Fatal("both ipv4 and ipv6 prefixes are empty", errors.New("must have IP"))
 			}
 
-			network, cat := ParseCIDR(cdir)
+			network, cat := ParseCIDR(cidr)
 			ranges = append(ranges, &IPRange{
 				Network: network,
 				Cat:     cat,

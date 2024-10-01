@@ -34,8 +34,8 @@ func (a Scaleway) GetIPRanges() []*IPRange {
 	log.Info("Using static Scaleway ip ranges")
 
 	ranges := make([]*IPRange, 0)
-	for _, cdir := range scalewayRanges {
-		network, cat := ParseCIDR(cdir)
+	for _, cidr := range scalewayRanges {
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,

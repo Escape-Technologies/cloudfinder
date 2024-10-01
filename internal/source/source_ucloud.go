@@ -21,8 +21,8 @@ func (a Ucloud) GetIPRanges() []*IPRange {
 	if err != nil {
 		log.Fatal("Failed to load text url to range for ucloud", err)
 	}
-	for _, cdir := range ucloudRanges {
-		network, cat := ParseCIDR(cdir)
+	for _, cidr := range ucloudRanges {
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,
