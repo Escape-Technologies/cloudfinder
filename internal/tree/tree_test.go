@@ -16,14 +16,14 @@ func makeTreeHelper() *tree {
 		Root: newNode(),
 		Cat:  source.CatIPv4,
 	}
-	networksCdirs := []string{
+	networksCidrs := []string{
 		"8.8.4.0/24",
 		"3.5.140.0/22",
 	}
 
 	// build the tree
-	for _, networkCdir := range networksCdirs {
-		_, network, err := net.ParseCIDR(networkCdir)
+	for _, networkCidr := range networksCidrs {
+		_, network, err := net.ParseCIDR(networkCidr)
 		if err != nil {
 			log.Error("Failed to parse CIDR", err)
 		}
@@ -128,9 +128,9 @@ func TestSerializeAndLoad(t *testing.T) {
 	}
 }
 
-func cdirsToRanges(cdirs []string) []*source.IPRange {
+func cidrsToRanges(cidrs []string) []*source.IPRange {
 	ranges := make([]*source.IPRange, 0)
-	for _, c := range cdirs {
+	for _, c := range cidrs {
 		net, cat := source.ParseCIDR(c)
 		ranges = append(ranges, &source.IPRange{
 			Network: net,
@@ -140,12 +140,12 @@ func cdirsToRanges(cdirs []string) []*source.IPRange {
 	return ranges
 }
 
-func rangesToCdirs(ranges []*source.IPRange) []string {
-	cdirs := make([]string, 0)
+func rangesToCidrs(ranges []*source.IPRange) []string {
+	cidrs := make([]string, 0)
 	for _, r := range ranges {
-		cdirs = append(cdirs, r.Network.String())
+		cidrs = append(cidrs, r.Network.String())
 	}
-	return cdirs
+	return cidrs
 }
 
 func TestOverlapCases(t *testing.T) {
@@ -182,18 +182,18 @@ func TestOverlapCases(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		ranges := cdirsToRanges(tt.ranges)
+		ranges := cidrsToRanges(tt.ranges)
 		tree := NewIPv4Tree()
 		for _, r := range ranges {
 			tree.Add(r)
 		}
 
 		gotRanges := tree.GetAllRanges()
-		gotCdirs := rangesToCdirs(gotRanges)
-		slices.Sort(gotCdirs)
+		gotCidrs := rangesToCidrs(gotRanges)
+		slices.Sort(gotCidrs)
 		slices.Sort(tt.expected)
-		if !slices.Equal(gotCdirs, tt.expected) {
-			t.Errorf("[%s] Got %+v, Expected: %+v", tt.name, gotCdirs, tt.expected)
+		if !slices.Equal(gotCidrs, tt.expected) {
+			t.Errorf("[%s] Got %+v, Expected: %+v", tt.name, gotCidrs, tt.expected)
 		}
 	}
 }

@@ -29,8 +29,8 @@ func (a Fastly) GetIPRanges() []*IPRange {
 
 	fastlyRanges.Addresses = append(fastlyRanges.Addresses, fastlyRanges.IPv6Addresses...)
 	ranges := make([]*IPRange, 0)
-	for _, cdir := range fastlyRanges.Addresses {
-		network, cat := ParseCIDR(cdir)
+	for _, cidr := range fastlyRanges.Addresses {
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,

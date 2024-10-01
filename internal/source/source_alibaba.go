@@ -21,8 +21,8 @@ func (a Alibaba) GetIPRanges() []*IPRange {
 	if err != nil {
 		log.Fatal("Failed to load text url to range for Alibaba", err)
 	}
-	for _, cdir := range alibabaRanges {
-		network, cat := ParseCIDR(cdir)
+	for _, cidr := range alibabaRanges {
+		network, cat := ParseCIDR(cidr)
 		ranges = append(ranges, &IPRange{
 			Network: network,
 			Cat:     cat,

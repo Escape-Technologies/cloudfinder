@@ -13,7 +13,7 @@ type Ibm struct{}
 const ibmFileURL = "https://raw.githubusercontent.com/dprosper/cidr-calculator/main/data/datacenters.json"
 
 type cat []*struct {
-	CdirBlocks []string `json:"cidr_blocks"`
+	CidrBlocks []string `json:"cidr_blocks"`
 }
 
 type ibmJSON struct {
@@ -54,9 +54,9 @@ func (a Ibm) GetIPRanges() []*IPRange {
 		}
 
 		for _, c := range m {
-			for _, cdirs := range c {
-				for _, cdir := range cdirs.CdirBlocks {
-					network, cat := ParseCIDR(cdir)
+			for _, cidrs := range c {
+				for _, cidr := range cidrs.CidrBlocks {
+					network, cat := ParseCIDR(cidr)
 					if isPrivateNetwork(network) {
 						continue
 					}
