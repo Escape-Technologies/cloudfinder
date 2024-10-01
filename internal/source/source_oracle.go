@@ -7,7 +7,7 @@ import (
 
 type Oracle struct{}
 
-const oracleFileURL = "https://raw.githubusercontent.com/femueller/cloud-ip-ranges/master/oracle-cloud-ip-ranges.json"
+const oracleFileURL = "https://docs.oracle.com/en-us/iaas/tools/public_ip_ranges.json"
 
 type oracleJSON struct {
 	Regions []struct {
