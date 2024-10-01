@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"sort"
 	"strings"
@@ -122,9 +123,31 @@ func computeRangesHash(sortedRanges []*source.IPRange) string {
 	return hex.EncodeToString(hash)
 }
 
+func compareIPs(a, b net.IP) int {
+	a = a.To16()
+	b = b.To16()
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			if a[i] < b[i] {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
+}
+
 func sortRanges(ranges []*source.IPRange) {
 	sort.Slice(ranges, func(i, j int) bool {
-		return ranges[i].String() > ranges[j].String()
+		// Compare IP addresses
+		ipCompare := compareIPs(ranges[i].Network.IP, ranges[j].Network.IP)
+		if ipCompare != 0 {
+			return ipCompare < 0
+		}
+		// If IP addresses are equal, compare prefix lengths (shorter prefixes first)
+		iMaskSize, _ := ranges[i].Network.Mask.Size()
+		jMaskSize, _ := ranges[j].Network.Mask.Size()
+		return iMaskSize < jMaskSize
 	})
 }
 
