@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - "**.go"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
