@@ -7,26 +7,24 @@ import (
 
 type Linode struct{}
 
-const LinodeFileURL = "https://raw.githubusercontent.com/devanshbatham/ip2cloud/main/data/linode.txt"
-
 func (a Linode) GetProvider() provider.Provider {
 	return provider.Linode
 }
 
-func (a Linode) GetIPRanges() []*IPRange {
-	log.Info("Using static Linode ip ranges")
+var LinodeASNs = []string{
+	// Linode AS63949
+	"63949",
+	// Linode CorpNet
+	"48337",
+}
 
+func (a Linode) GetIPRanges() []*IPRange {
 	ranges := make([]*IPRange, 0)
-	linodeRanges, err := LoadTextURLToRange(LinodeFileURL)
-	if err != nil {
-		log.Fatal("Failed to load text url to range for Linode", err)
-	}
-	for _, cidr := range linodeRanges {
-		network, cat := ParseCIDR(cidr)
-		ranges = append(ranges, &IPRange{
-			Network: network,
-			Cat:     cat,
-		})
+	for _, asn := range LinodeASNs {
+		log.Info("[Linode] - Using ranges from ASN list (AS%s)", asn)
+		_ranges := getRangesForAsn(asn)
+		ranges = append(ranges, _ranges...)
+		log.Info("[Linode] - Found %d ranges for AS%s", len(ranges), asn)
 	}
 	return ranges
 }

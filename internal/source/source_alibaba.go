@@ -7,26 +7,26 @@ import (
 
 type Alibaba struct{}
 
-const alibabaFileURL = "https://raw.githubusercontent.com/devanshbatham/ip2cloud/main/data/aliyun.txt"
+var AlibabaASNs = []string{
+	// Alibaba cloud
+	"24429",
+	// Alibaba AS45102
+	"45102",
+	// Alibaba (china) AS37963
+	"37963",
+}
 
 func (a Alibaba) GetProvider() provider.Provider {
 	return provider.Alibaba
 }
 
 func (a Alibaba) GetIPRanges() []*IPRange {
-	log.Info("Using static Alibaba ip ranges")
-
 	ranges := make([]*IPRange, 0)
-	alibabaRanges, err := LoadTextURLToRange(alibabaFileURL)
-	if err != nil {
-		log.Fatal("Failed to load text url to range for Alibaba", err)
-	}
-	for _, cidr := range alibabaRanges {
-		network, cat := ParseCIDR(cidr)
-		ranges = append(ranges, &IPRange{
-			Network: network,
-			Cat:     cat,
-		})
+	for _, asn := range AlibabaASNs {
+		log.Info("[Alibaba] - Using ranges from ASN list (AS%s)", asn)
+		_ranges := getRangesForAsn(asn)
+		ranges = append(ranges, _ranges...)
+		log.Info("[Alibaba] - Found %d ranges for AS%s", len(ranges), asn)
 	}
 	return ranges
 }

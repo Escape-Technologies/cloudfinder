@@ -7,26 +7,16 @@ import (
 
 type Ucloud struct{}
 
-const ucloudFileURL = "https://raw.githubusercontent.com/devanshbatham/ip2cloud/main/data/ucloud.txt"
-
 func (a Ucloud) GetProvider() provider.Provider {
 	return provider.Ucloud
 }
 
-func (a Ucloud) GetIPRanges() []*IPRange {
-	log.Info("Using static Ucloud ip ranges")
+// UCLOUD INFORMATION TECHNOLOGY (HK) LIMITED
+var UcloudASN = "135377"
 
-	ranges := make([]*IPRange, 0)
-	ucloudRanges, err := LoadTextURLToRange(ucloudFileURL)
-	if err != nil {
-		log.Fatal("Failed to load text url to range for ucloud", err)
-	}
-	for _, cidr := range ucloudRanges {
-		network, cat := ParseCIDR(cidr)
-		ranges = append(ranges, &IPRange{
-			Network: network,
-			Cat:     cat,
-		})
-	}
+func (a Ucloud) GetIPRanges() []*IPRange {
+	log.Info("[Ucloud] - Using ranges from ASN list (AS%s)", UcloudASN)
+	ranges := getRangesForAsn(UcloudASN)
+	log.Info("[Ucloud] - Found %d ranges for AS%s", len(ranges), UcloudASN)
 	return ranges
 }
