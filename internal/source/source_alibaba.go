@@ -8,6 +8,8 @@ import (
 type Alibaba struct{}
 
 var AlibabaASNs = []string{
+	// Alibaba cloud
+	"24429",
 	// Alibaba AS45102
 	"45102",
 	// Alibaba (china) AS37963
