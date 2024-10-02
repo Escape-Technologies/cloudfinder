@@ -1,6 +1,7 @@
 package source
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,7 +10,10 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/Escape-Technologies/cloudfinder/internal/log"
 )
 
 const defaultHTTPTimeout = 30 * time.Second
@@ -127,4 +131,68 @@ func isPrivateNetwork(n *net.IPNet) bool {
 		}
 	}
 	return false
+}
+
+/// BGP TOOLS
+
+// ensure we fill the map only once
+var bgpToolsMutex = sync.Mutex{}
+
+// ASN -> CIDR
+var bgpToolsAsnRanges map[string][]*IPRange
+var bgpToolsTableURL = "https://bgp.tools/table.txt"
+
+// Fetches https://bgp.tools/table.txt and parses it into the ASN -> CIDR map
+func getRangesForAsn(asn string) []*IPRange {
+	bgpToolsMutex.Lock()
+	if bgpToolsAsnRanges == nil {
+		bgpToolsAsnRanges = make(map[string][]*IPRange)
+
+		// Fill the map
+		log.Info("Fetching AS infos from %s", bgpToolsTableURL)
+		req, _ := http.NewRequest(http.MethodGet, bgpToolsTableURL, nil) // nolint: noctx
+		// bgp tools requires a descriptive user agent in case the program gets out of control
+		req.Header.Add("user-agent", "https://github.com/Escape-Technologies/cloudfinder - nohe@escape.tech")
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatal("Error getting bgp tools table", err)
+		}
+		if res.StatusCode != http.StatusOK {
+			err := fmt.Errorf("status code: %d", res.StatusCode)
+			log.Fatal("Error getting bgp tools table", err)
+		}
+
+		scanner := bufio.NewScanner(res.Body)
+		// Read lines
+		for scanner.Scan() {
+			line := scanner.Text()
+			// Line is formatted as "<CIDR> <ASN>"
+			x := strings.Split(line, " ")
+			if len(x) != 2 { // nolint: mnd
+				continue
+			}
+			cidr, asn := x[0], x[1]
+
+			n, cat := ParseCIDR(cidr)
+			// Skip private networks
+			if isPrivateNetwork(n) {
+				continue
+			}
+			// Fill map
+			if _, ok := bgpToolsAsnRanges[asn]; !ok {
+				bgpToolsAsnRanges[asn] = make([]*IPRange, 0)
+			}
+			bgpToolsAsnRanges[asn] = append(bgpToolsAsnRanges[asn], &IPRange{
+				Network: n,
+				Cat:     cat,
+			})
+		}
+		res.Body.Close()
+		log.Info("Got %d AS infos", len(bgpToolsAsnRanges))
+	}
+	bgpToolsMutex.Unlock()
+	if val, ok := bgpToolsAsnRanges[asn]; ok {
+		return val
+	}
+	return []*IPRange{}
 }
