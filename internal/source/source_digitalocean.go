@@ -16,6 +16,21 @@ func (a Digitalocean) GetProvider() provider.Provider {
 	return provider.Digitalocean
 }
 
+// Digital ocean csv has been broken, with lines containing less than the usual 5 fields
+// This will remove incorrect lines
+func fixCsv(in string) string {
+	var result []string
+	lines := strings.Split(in, "\n")
+
+	for _, line := range lines {
+		if strings.Count(line, ",") == 4 { //nolint:mnd
+			result = append(result, line)
+		}
+	}
+
+	return strings.Join(result, "\n")
+}
+
 func (a Digitalocean) GetIPRanges() []*IPRange {
 	log.Info("Fetching do ip ranges from %s", doFileURL)
 
@@ -23,6 +38,7 @@ func (a Digitalocean) GetIPRanges() []*IPRange {
 	if err != nil {
 		log.Fatal("Failed to read digitalocean ip ranges", err)
 	}
+	content = fixCsv(content)
 	data, err := csv.NewReader(strings.NewReader(content)).ReadAll()
 	if err != nil {
 		log.Fatal("Failed to read csv", err)
