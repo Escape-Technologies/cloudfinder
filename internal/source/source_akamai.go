@@ -13,7 +13,7 @@ func (a Akamai) GetProvider() provider.Provider {
 
 // source: https://github.com/SecOps-Institute/Akamai-ASN-and-IPs-List/blob/master/akamai_asn_list.lst
 var AkamaiASNs = []string{
-	"12222",
+	"12222", 
 	"16625",
 	"16702",
 	"17204",
