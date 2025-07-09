@@ -19,6 +19,7 @@ Scaleway
 Tencent
 Ucloud
 Vercel
+Akamai
 )
 */
 type Provider int

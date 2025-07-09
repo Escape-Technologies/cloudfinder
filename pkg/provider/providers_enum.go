@@ -28,11 +28,12 @@ const (
 	Tencent
 	Ucloud
 	Vercel
+	Akamai
 )
 
 var ErrInvalidProvider = errors.New("not a valid Provider")
 
-const _ProviderName = "UnknownAwsAlibabaAzureCloudflareDigitaloceanFastlyGcpIbmLinodeOracleOvhScalewayTencentUcloudVercel"
+const _ProviderName = "UnknownAwsAlibabaAzureCloudflareDigitaloceanFastlyGcpIbmLinodeOracleOvhScalewayTencentUcloudVercelAkamai"
 
 var _ProviderMap = map[Provider]string{
 	Unknown:      _ProviderName[0:7],
@@ -51,6 +52,7 @@ var _ProviderMap = map[Provider]string{
 	Tencent:      _ProviderName[79:86],
 	Ucloud:       _ProviderName[86:92],
 	Vercel:       _ProviderName[92:98],
+	Akamai:       _ProviderName[98:104],
 }
 
 // String implements the Stringer interface.
@@ -69,22 +71,23 @@ func (x Provider) IsValid() bool {
 }
 
 var _ProviderValue = map[string]Provider{
-	_ProviderName[0:7]:   Unknown,
-	_ProviderName[7:10]:  Aws,
-	_ProviderName[10:17]: Alibaba,
-	_ProviderName[17:22]: Azure,
-	_ProviderName[22:32]: Cloudflare,
-	_ProviderName[32:44]: Digitalocean,
-	_ProviderName[44:50]: Fastly,
-	_ProviderName[50:53]: Gcp,
-	_ProviderName[53:56]: Ibm,
-	_ProviderName[56:62]: Linode,
-	_ProviderName[62:68]: Oracle,
-	_ProviderName[68:71]: Ovh,
-	_ProviderName[71:79]: Scaleway,
-	_ProviderName[79:86]: Tencent,
-	_ProviderName[86:92]: Ucloud,
-	_ProviderName[92:98]: Vercel,
+	_ProviderName[0:7]:    Unknown,
+	_ProviderName[7:10]:   Aws,
+	_ProviderName[10:17]:  Alibaba,
+	_ProviderName[17:22]:  Azure,
+	_ProviderName[22:32]:  Cloudflare,
+	_ProviderName[32:44]:  Digitalocean,
+	_ProviderName[44:50]:  Fastly,
+	_ProviderName[50:53]:  Gcp,
+	_ProviderName[53:56]:  Ibm,
+	_ProviderName[56:62]:  Linode,
+	_ProviderName[62:68]:  Oracle,
+	_ProviderName[68:71]:  Ovh,
+	_ProviderName[71:79]:  Scaleway,
+	_ProviderName[79:86]:  Tencent,
+	_ProviderName[86:92]:  Ucloud,
+	_ProviderName[92:98]:  Vercel,
+	_ProviderName[98:104]: Akamai,
 }
 
 // ParseProvider attempts to convert a string to a Provider.
