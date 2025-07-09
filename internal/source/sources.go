@@ -47,6 +47,7 @@ var AllSources = []IPRangeSource{
 	Tencent{},
 	Ucloud{},
 	Vercel{},
+	Akamai{},
 }
 
 func GetAllIPRanges(sources []IPRangeSource) []*IPRange {
