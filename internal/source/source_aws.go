@@ -26,7 +26,7 @@ func (a Aws) GetIPRanges() []*IPRange {
 
 	var awsJSON *awsJSON
 	err := LoadFileURLToJSON(awsFileURL, &awsJSON)
-	if err != nil {
+	if err != nil { 
 		log.Fatal("Failed to load file url to json for AWS", err)
 	}
 
