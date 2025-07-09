@@ -41,6 +41,11 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - path: 'examples/(.+).go'
+        linters:
+          - revive
+          - staticcheck
 severity:
   default: error
 formatters:
