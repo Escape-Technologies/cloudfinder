@@ -11,10 +11,11 @@ all: lint generate pre-build build test
 .PHONY: setup
 setup:
 	go install github.com/abice/go-enum@latest
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.2.1
 
 .PHONY: lint
 lint: 
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0 run --fast -- $(go list -f '{{.Dir}}/...' -m)
+	golangci-lint run -- $(go list -f '{{.Dir}}/...' -m)
 
 generate:
 	go generate ./...
