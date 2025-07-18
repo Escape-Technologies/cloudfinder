@@ -142,6 +142,40 @@ var bgpToolsMutex = sync.Mutex{}
 var bgpToolsAsnRanges map[string][]*IPRange
 var bgpToolsTableURL = "https://bgp.tools/table.txt"
 
+func requestWithRetry(req *http.Request, maxRetries int) *http.Response {
+	TIMEOUT := 45 // to avoid linter cries
+	httpClient := &http.Client{
+		Timeout: time.Duration(TIMEOUT) * time.Second,
+	}
+
+	for i := 0; i < maxRetries; i++ { // retry 3 times
+		if i > 0 {
+			time.Sleep(1 * time.Second)
+		}
+
+		res, err := httpClient.Do(req)
+		if err != nil {
+			if i < maxRetries-1 {
+				log.Error("Error getting bgp tools table", err)
+				continue
+			}
+			// last try failed
+			log.Fatal("Error getting bgp tools table", err)
+		}
+		if res.StatusCode != http.StatusOK && i < maxRetries-1 {
+			err := fmt.Errorf("status code: %d", res.StatusCode)
+			if i < maxRetries-1 {
+				log.Error("Error getting bgp tools table", err)
+				continue
+			}
+			// last try failed
+			log.Fatal("Error getting bgp tools table", err)
+		}
+		return res
+	}
+	panic("shouldn't be reached")
+}
+
 // Fetches https://bgp.tools/table.txt and parses it into the ASN -> CIDR map
 func getRangesForAsn(asn string) []*IPRange {
 	bgpToolsMutex.Lock()
@@ -153,14 +187,9 @@ func getRangesForAsn(asn string) []*IPRange {
 		req, _ := http.NewRequest(http.MethodGet, bgpToolsTableURL, nil) // nolint: noctx
 		// bgp tools requires a descriptive user agent in case the program gets out of control
 		req.Header.Add("user-agent", "https://github.com/Escape-Technologies/cloudfinder - nohe@escape.tech")
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal("Error getting bgp tools table", err)
-		}
-		if res.StatusCode != http.StatusOK {
-			err := fmt.Errorf("status code: %d", res.StatusCode)
-			log.Fatal("Error getting bgp tools table", err)
-		}
+		
+		const MaxRetries = 3
+		res := requestWithRetry(req, MaxRetries)
 
 		scanner := bufio.NewScanner(res.Body)
 		// Read lines
