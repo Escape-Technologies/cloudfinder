@@ -1,6 +1,8 @@
 package source
 
 import (
+	"fmt"
+
 	"github.com/Escape-Technologies/cloudfinder/internal/log"
 	"github.com/Escape-Technologies/cloudfinder/pkg/provider"
 )
@@ -24,7 +26,12 @@ func (a Tencent) GetIPRanges() []*IPRange {
 	ranges := make([]*IPRange, 0)
 	for _, asn := range TencentASNs {
 		log.Info("[Tencent] - Using ranges from ASN list (AS%s)", asn)
-		_ranges := getRangesForAsn(asn)
+		_ranges, err := getRangesForAsn(asn)
+		if err != nil {
+			msg := fmt.Sprintf("[Tencent] - Error getting ranges for AS%s:", asn)
+			log.Error(msg, err)
+			continue
+		}
 		ranges = append(ranges, _ranges...)
 		log.Info("[Tencent] - Found %d ranges for AS%s", len(ranges), asn)
 	}

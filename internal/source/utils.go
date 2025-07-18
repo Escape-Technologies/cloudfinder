@@ -143,7 +143,7 @@ var bgpToolsAsnRanges map[string][]*IPRange
 var bgpToolsTableURL = "https://bgp.tools/table.txt"
 
 // Fetches https://bgp.tools/table.txt and parses it into the ASN -> CIDR map
-func getRangesForAsn(asn string) []*IPRange {
+func getRangesForAsn(asn string) ([]*IPRange, error) {
 	bgpToolsMutex.Lock()
 	if bgpToolsAsnRanges == nil {
 		bgpToolsAsnRanges = make(map[string][]*IPRange)
@@ -155,11 +155,14 @@ func getRangesForAsn(asn string) []*IPRange {
 		req.Header.Add("user-agent", "https://github.com/Escape-Technologies/cloudfinder - nohe@escape.tech")
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Fatal("Error getting bgp tools table", err)
+			// This error is not fatal, no need to panic
+			log.Error("Error getting bgp tools table", err)
+			return []*IPRange{}, err
 		}
 		if res.StatusCode != http.StatusOK {
 			err := fmt.Errorf("status code: %d", res.StatusCode)
-			log.Fatal("Error getting bgp tools table", err)
+			log.Error("Error getting bgp tools table", err)
+			return []*IPRange{}, err
 		}
 
 		scanner := bufio.NewScanner(res.Body)
@@ -192,7 +195,7 @@ func getRangesForAsn(asn string) []*IPRange {
 	}
 	bgpToolsMutex.Unlock()
 	if val, ok := bgpToolsAsnRanges[asn]; ok {
-		return val
+		return val, nil
 	}
-	return []*IPRange{}
+	return []*IPRange{}, nil
 }
