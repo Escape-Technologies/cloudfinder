@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"strings"
@@ -150,7 +151,7 @@ func requestWithRetry(req *http.Request, maxRetries int) *http.Response {
 
 	for i := 0; i < maxRetries; i++ { // retry 3 times
 		if i > 0 {
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Duration(math.Pow(2, float64(i))) * time.Second)
 		}
 
 		res, err := httpClient.Do(req)
