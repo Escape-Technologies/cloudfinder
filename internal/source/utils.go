@@ -143,7 +143,7 @@ var bgpToolsMutex = sync.Mutex{}
 var bgpToolsAsnRanges map[string][]*IPRange
 var bgpToolsTableURL = "https://bgp.tools/table.txt"
 
-func requestWithRetry(req *http.Request, maxRetries int) *http.Response {
+func requestWithRetry(req *http.Request, maxRetries int) (*http.Response, error) {
 	TIMEOUT := 45 // to avoid linter cries
 	httpClient := &http.Client{
 		Timeout: time.Duration(TIMEOUT) * time.Second,
@@ -151,7 +151,9 @@ func requestWithRetry(req *http.Request, maxRetries int) *http.Response {
 
 	for i := 0; i < maxRetries; i++ { // retry 3 times
 		if i > 0 {
-			time.Sleep(time.Duration(math.Pow(2, float64(i))) * time.Second)
+			// exponential backoff to avoid overwhelming the server
+			two := 2.0 // linter cries a lot
+			time.Sleep(time.Duration(math.Pow(two, float64(i))) * time.Second)
 		}
 
 		res, err := httpClient.Do(req)
@@ -172,9 +174,9 @@ func requestWithRetry(req *http.Request, maxRetries int) *http.Response {
 			// last try failed
 			log.Fatal("Error getting bgp tools table", err)
 		}
-		return res
+		return res, nil
 	}
-	panic("shouldn't be reached")
+	return nil, errors.New("shouldn't be reached")
 }
 
 // Fetches https://bgp.tools/table.txt and parses it into the ASN -> CIDR map
@@ -190,7 +192,10 @@ func getRangesForAsn(asn string) []*IPRange {
 		req.Header.Add("user-agent", "https://github.com/Escape-Technologies/cloudfinder - nohe@escape.tech")
 		
 		const MaxRetries = 3
-		res := requestWithRetry(req, MaxRetries)
+		res, err := requestWithRetry(req, MaxRetries)
+		if err != nil {
+			log.Fatal("Error getting bgp tools table", err)
+		}
 
 		scanner := bufio.NewScanner(res.Body)
 		// Read lines
