@@ -149,6 +149,7 @@ func requestWithRetry(req *http.Request, maxRetries int) (*http.Response, error)
 		Timeout: time.Duration(TIMEOUT) * time.Second,
 	}
 
+	var globalErr error = nil
 	for i := 0; i < maxRetries; i++ { // retry 3 times
 		if i > 0 {
 			// exponential backoff to avoid overwhelming the server
@@ -157,6 +158,7 @@ func requestWithRetry(req *http.Request, maxRetries int) (*http.Response, error)
 		}
 
 		res, err := httpClient.Do(req)
+		globalErr = err
 		if err != nil {
 			if i < maxRetries-1 {
 				log.Error("Error getting bgp tools table", err)
@@ -176,7 +178,7 @@ func requestWithRetry(req *http.Request, maxRetries int) (*http.Response, error)
 		}
 		return res, nil
 	}
-	return nil, errors.New("shouldn't be reached")
+	return nil, globalErr
 }
 
 // Fetches https://bgp.tools/table.txt and parses it into the ASN -> CIDR map
