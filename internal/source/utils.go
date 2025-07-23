@@ -149,34 +149,25 @@ func requestWithRetry(req *http.Request, maxRetries int) (*http.Response, error)
 		Timeout: time.Duration(TIMEOUT) * time.Second,
 	}
 
-	var globalErr error = nil
-	for i := 0; i < maxRetries; i++ { // retry 3 times
-		if i > 0 {
-			// exponential backoff to avoid overwhelming the server
-			two := 2.0 // linter cries a lot
-			time.Sleep(time.Duration(math.Pow(two, float64(i))) * time.Second)
-		}
+	var globalErr error
+	for i := range maxRetries { // retry 3 times
+		// exponential backoff to avoid overwhelming the server
+		two := 2.0 // linter cries a lot
+		time.Sleep(time.Duration(math.Pow(two, float64(i))) * time.Second)
 
 		res, err := httpClient.Do(req)
 		globalErr = err
-		if err != nil {
-			if i < maxRetries-1 {
-				log.Error("Error getting bgp tools table", err)
-				continue
-			}
-			// last try failed
-			log.Fatal("Error getting bgp tools table", err)
+		
+		if err == nil && res.StatusCode == http.StatusOK {
+			return res, nil
 		}
-		if res.StatusCode != http.StatusOK && i < maxRetries-1 {
-			err := fmt.Errorf("status code: %d", res.StatusCode)
-			if i < maxRetries-1 {
-				log.Error("Error getting bgp tools table", err)
-				continue
-			}
-			// last try failed
-			log.Fatal("Error getting bgp tools table", err)
+
+		if res.StatusCode != http.StatusOK {
+			err = fmt.Errorf("status code: %d", res.StatusCode)
+			log.Error("Error getting bgp tools table", err)
+		} else if err != nil {
+			log.Error("Error getting bgp tools table", err)
 		}
-		return res, nil
 	}
 	return nil, globalErr
 }
