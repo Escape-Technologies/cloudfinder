@@ -1,13 +1,1 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 793db39829a3ce8d5f00a57c5cbf01c181019a6f3a97c54d9a92a2a0c2d95f67
-=======
-4cb53568d239bc862466e7a4b5474b3cbd2aed694e289345b6647df5d73cb5b9
->>>>>>> 7ce3551 (fix: timout isn't fatal anymore)
-=======
-595518876728946a6589accaa3792ea818d149574db5e71cfcb2c47de3557493
->>>>>>> 9e191c0 (fix: minor fixes)
-=======
-4b4d704112fdf80c0150994992756590ff5ffd439c8d9428fd0af2392cde27e7
->>>>>>> 5a22d48 (simplified code structure for retries)
