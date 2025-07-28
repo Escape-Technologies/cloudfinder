@@ -157,12 +157,12 @@ func requestWithRetry(req *http.Request, maxRetries int) (*http.Response, error)
 
 		res, err := httpClient.Do(req)
 		globalErr = err
-		
+
 		if err == nil && res.StatusCode == http.StatusOK {
 			return res, nil
 		}
 
-		if res.StatusCode != http.StatusOK {
+		if res != nil && res.StatusCode != http.StatusOK {
 			err = fmt.Errorf("status code: %d", res.StatusCode)
 			log.Error("Error getting bgp tools table", err)
 		} else if err != nil {
@@ -183,7 +183,7 @@ func getRangesForAsn(asn string) []*IPRange {
 		req, _ := http.NewRequest(http.MethodGet, bgpToolsTableURL, nil) // nolint: noctx
 		// bgp tools requires a descriptive user agent in case the program gets out of control
 		req.Header.Add("user-agent", "https://github.com/Escape-Technologies/cloudfinder - nohe@escape.tech")
-		
+
 		const MaxRetries = 3
 		res, err := requestWithRetry(req, MaxRetries)
 		if err != nil {
